@@ -1,0 +1,3 @@
+jira
+urllib3<2
+python-dotenv
