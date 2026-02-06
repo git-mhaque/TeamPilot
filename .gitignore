@@ -77,3 +77,6 @@ venv.bak/
 # Miscellaneous
 *.swp
 *~
+sprint_dataset.csv
+TeamDashboard.md
+velocity_cycle_time.png

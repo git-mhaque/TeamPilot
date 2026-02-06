@@ -1,3 +1,6 @@
 jira
 urllib3<2
 python-dotenv
+python-dateutil
+pandas
+matplotlib
