@@ -1,12 +1,24 @@
-# Team Dashboard
+# TeamPilot
 
-This Python project demonstrates how to access your team's project data using the JIRA REST API to visualize various team analytics.
+> TeamPilot: Your AI-Powered Command Center for Team Success.
 
-## Features
-- Listing available projects.
+`TeamPilot` transforms raw Jira data into actionable intelligence. By orchestrating automated workflows through the lens of three expert AI personas — `The Scrum Master`, `The Agile Coach`, and `The Delivery Manager` — it provides the navigation and insights teams need to land their sprints on time, every time.
 
-## Quick Start
+|Persona |	TeamPilot Role	| Focus Area |
+|---|--|---|
+| Scrum Master	| The Navigator |	Tactical sprint execution and obstacle removal.| 
+| Agile Coach	| The Flight Instructor	| Long-term growth, health metrics, and cultural evolution. | 
+| Delivery Manager |	The Mission Director |	Strategic alignment across multiple initiatives and timelines. |
+|||
 
+
+This project orchestrates and automates team workflows and generates insights via Cline workflows. These workflows use Jira as a primary data source and leverage Python to fetch and preprocess relevant data, and then utilize AI to generate insightful artifacts. 
+
+
+# Quick Start
+
+
+## Python Setup
 1. **Clone/download this project.**
 
 2. **(Recommended) Create and activate a Python virtual environment:**
@@ -35,3 +47,31 @@ This Python project demonstrates how to access your team's project data using th
 ## Environment Variables
 - `JIRA_BASE_URL`: Your JIRA URL. 
 - `JIRA_PAT`: Your JIRA Personal Access Token (PAT).
+
+## Cline Rules 
+
+include `Config.md` in `.clinerules` with following information:
+```
+# Jira 
+- Jira project: <Your Jira Project Key>
+- Agile board: <Your Agile Board Name>
+
+# Conflucne 
+- Space key: <Default Space Key>
+- Create all pages under this parent page: `<Default Parent Page>` (pageId=<PArent Page ID>)
+- Overwrite or update if any page with the same name already exists
+```
+
+# Running Workflows 
+
+```
+\sprint-insights.md 
+```
+
+```
+\team-insights.md 
+```
+
+```
+\initiative-insights.md 
+```

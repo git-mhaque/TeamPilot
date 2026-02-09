@@ -8,7 +8,7 @@ from dateutil import parser
 import csv
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import json
 
 def get_jira_credentials():
     load_dotenv()
@@ -213,6 +213,10 @@ def get_sprint_dataset(sprints, jira, story_points_field='customfield_10004'):
 def plot_velocity_cycle_time(data_filename="sprint_dataset.csv", output_filename="velocity_cycle_time.png"):
  
     df = pd.read_csv(data_filename)
+    
+    #df['CompletedDate'] = pd.to_datetime(df['CompletedDate'])
+    df = df.sort_values(by='CompletedDate')
+    
     sprints = df['Name']
     velocity = df['CompletedStoryPoints']
     cycle_time = df['AverageCycleTime']
@@ -223,6 +227,7 @@ def plot_velocity_cycle_time(data_filename="sprint_dataset.csv", output_filename
     bars = ax1.bar(sprints, velocity, width=0.4, color='#1f77b4', label='Velocity (Story Points)')
     ax1.set_ylabel('Velocity (Story Points)', color='#1f77b4')
     ax1.set_xlabel('Sprint')
+    ax1.tick_params(axis='x', rotation=90)
     ax1.set_ylim(0, max(velocity)*1.15)
     
     line = ax2.plot(sprints, cycle_time, color='#d62728', marker='o', linewidth=3, label='Avg Cycle Time (days)')
@@ -233,6 +238,162 @@ def plot_velocity_cycle_time(data_filename="sprint_dataset.csv", output_filename
     fig.tight_layout()
     fig.legend(loc='upper right', bbox_to_anchor=(1, 1), bbox_transform=ax1.transAxes)
     plt.savefig(output_filename)
+
+
+def get_epics_dataset(jira_client, epic_keys):
+    base_url = jira_client.client_info() # Gets the Jira base URL
+    dataset = []
+
+    for key in epic_keys:
+        try:
+            # 1. Fetch Epic Details
+            epic = jira_client.issue(key)
+            
+            # 2. Find all issues belonging to this Epic
+            # 'parent' works for Jira Cloud; 'cf[10001]' (Epic Link) for older Server/Data Center
+            issues_in_epic = jira_client.search_issues(f'parent = "{key}" OR "Epic Link" = "{key}"', maxResults=False)
+            
+            
+
+            total = len(issues_in_epic)
+            stats = {"To Do": 0, "In Progress": 0, "Done": 0}
+
+            # 3. Categorize issues by Status Category, skipping ACXRM project issues
+            for issue in issues_in_epic:
+                # Skip any issue whose issue key contains 'ACXRM'
+                if "ACXRM" in getattr(issue, "key", ""):
+                    #print(f"Skipping issue {getattr(issue, 'key', '')} as it belongs to ACXRM project.")
+                    total -= 1  # Adjust total count since we're skipping this issue
+                    continue
+                category = issue.fields.status.statusCategory.name
+                if category in stats:
+                    stats[category] += 1
+
+            # 4. Calculate Percentages (avoiding division by zero)
+            def calc_pct(count):
+                return round((count / total) * 100, 2) if total > 0 else 0
+
+            print(f"Epic {key} has {total} issues.")
+            
+            # 5. Build the data object
+            dataset.append({
+                "issue_number": epic.key,
+                "title": epic.fields.summary,
+                "link": f"{base_url}/browse/{epic.key}",
+                "total_issues": total,
+                "completed": stats["Done"],
+                "inprogress": stats["In Progress"],
+                "todo": stats["To Do"],
+                "percentage_done": calc_pct(stats["Done"]),
+                "percentage_inprogress": calc_pct(stats["In Progress"]),
+                "percentage_todo": calc_pct(stats["To Do"])
+            })
+
+        except Exception as e:
+            print(f"Error processing Epic {key}: {e}")
+            continue
+
+    return dataset
+
+
+def get_sprint_insights_with_creep(jira_client, board_id, sp_field_id):
+    # 1. Get the active sprint
+    sprints = jira_client.sprints(board_id, state='active')
+    if not sprints:
+        return "No active sprint found."
+    
+    active_sprint = sprints[0]
+    sprint_id = active_sprint.id
+    sprint_start_dt = parser.parse(active_sprint.startDate)
+
+    # 2. Fetch issues with CHANGELOG expanded
+    jql = f'sprint = {sprint_id}'
+    issues = jira_client.search_issues(jql, expand='changelog', maxResults=False)
+
+    # 3. Initialize Expanded Dataset
+    dataset = {
+        "sprint_info": {
+            "name": active_sprint.name,
+            "start": active_sprint.startDate,
+            "end": getattr(active_sprint, 'endDate', None), # Added end_date
+        },
+        "metrics": {
+            "total_issues": len(issues), 
+            "scope_creep_count": 0, 
+            "creep_points": 0
+        },
+        "stages": {"To Do": 0, "In Progress": 0, "Done": 0},
+        "points": {"total": 0.0, "completed": 0.0, "remaining": 0.0},
+        "issue_collection": [],
+        "creep_issues": [] # Separate list for easy "Scope Change" reporting
+    }
+
+    for issue in issues:
+        # --- Scope Creep Logic ---
+        is_creep = False
+        added_date = None
+        histories = getattr(issue.changelog, 'histories', [])
+        for history in histories:
+            for item in history.items:
+                if item.field.lower() == 'sprint' and str(sprint_id) in str(item.to):
+                    added_date = parser.parse(history.created)
+                    if added_date > sprint_start_dt:
+                        is_creep = True
+                    break
+
+        # --- Status & Points Processing ---
+        # Map specific status to Category (To Do, In Progress, Done)
+        category = issue.fields.status.statusCategory.name
+        if category in dataset["stages"]:
+            dataset["stages"][category] += 1
+        
+        # Extract Story Points safely
+        points = getattr(issue.fields, sp_field_id, 0) or 0
+        dataset["points"]["total"] += points
+        
+        if category == "Done":
+            dataset["points"]["completed"] += points
+        else:
+            dataset["points"]["remaining"] += points
+
+        # --- Data Collection ---
+        issue_data = {
+            "key": issue.key,
+            "title": issue.fields.summary,
+            "assignee": str(issue.fields.assignee) if issue.fields.assignee else "Unassigned",
+            "status": issue.fields.status.name,
+            "category": category,
+            "points": points,
+            "is_creep": is_creep
+        }
+        
+        dataset["issue_collection"].append(issue_data)
+
+        if is_creep:
+            dataset["metrics"]["scope_creep_count"] += 1
+            dataset["metrics"]["creep_points"] += points
+            dataset["creep_issues"].append({
+                "key": issue.key,
+                "added_at": added_date.strftime("%Y-%m-%d %H:%M"),
+                "points": points
+            })
+
+    return dataset
+
+
+
+
+def save_dataset_to_json(data, filename="sprint_report.json"):
+    try:
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, default=str, ensure_ascii=False)
+        
+        print(f"Success: Data saved to '{os.path.abspath(filename)}'")
+        return True
+        
+    except Exception as e:
+        print(f"Error saving JSON: {e}")
+        return False
 
 
 def main():
@@ -258,15 +419,39 @@ def main():
     # cycle_time = compute_cycle_time(issue);
     # print(f"Cycle time (days): {cycle_time}")
 
-    sprints = get_all_closed_sprints(jira, board_id)
-    print(f"Total closed sprints: {len(sprints)}")
+    # sprints = get_all_closed_sprints(jira, board_id)
+    # print(f"Total closed sprints: {len(sprints)}")
 
-    sprint_data = get_sprint_dataset(sprints[:6], jira, story_points_field)
-    print("Sprint Dataset:", sprint_data)
+    # sprint_data = get_sprint_dataset(sprints[:10], jira, story_points_field)
+    # print("Sprint Dataset:", sprint_data)
 
-    write_dataset_to_csv(sprint_data, filename="sprint_dataset.csv")
+    # write_dataset_to_csv(sprint_data, filename="sprint_dataset.csv")
 
-    plot_velocity_cycle_time(data_filename="sprint_dataset.csv", output_filename="velocity_cycle_time.png")
+    # plot_velocity_cycle_time(data_filename="sprint_dataset.csv", output_filename="velocity_cycle_time.png")
+
+    epics = [ 
+              'CEGBUPOL-4468',
+              'CEGBUPOL-4485', 
+              'CEGBUPOL-4484', 
+              'CEGBUPOL-4483', 
+              'CEGBUPOL-4470', 
+              'CEGBUPOL-4187', 
+              'CEGBUPOL-3635', 
+              'CEGBUPOL-4487', 
+              'CEGBUPOL-3553', 
+              'CEGBUPOL-4486' 
+              ]
+    # data = get_epics_dataset(jira, epics)
+
+    # print("Epics Dataset:", data)
+
+    # write_dataset_to_csv(data, filename="epics_dataset.csv")
+
+    sprint_dataset = get_sprint_insights_with_creep(jira, board_id, story_points_field)
+
+    save_dataset_to_json(sprint_dataset, filename="sprint_report.json")
+
+    # print(sprint_dataset)
 
 if __name__ == "__main__":
     main()
