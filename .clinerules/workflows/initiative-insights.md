@@ -9,7 +9,7 @@
     - "Initiavie" (epic title)   
     - "Count" 
     - "Completed" (e.g., 20%)
-    - "In progress" (e.g., 30%)
+    - "In Progress" (e.g., 30%)
     - "To Do" (e.g., 60%)
     - "RAG" (Red, Amber, Green - show colorful visual indicators 🔴  🟠  🟢)
     - "Insights" (Your one line insight)
