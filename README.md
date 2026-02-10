@@ -45,8 +45,11 @@ This project orchestrates and automates team workflows and generates insights vi
     ```
 
 ## Environment Variables
-- `JIRA_BASE_URL`: Your JIRA URL. 
-- `JIRA_PAT`: Your JIRA Personal Access Token (PAT).
+- `JIRA_BASE_URL`: Your JIRA URL (e.g., https://your-domain.atlassian.net).
+- `JIRA_PAT`: Your JIRA Personal Access Token (PAT). Generate at https://id.atlassian.com/manage-profile/security/api-tokens.
+- `JIRA_PROJECT_KEY`: Your Jira project key (e.g., CEGBUPOL).
+- `JIRA_BOARD_ID`: The ID of your Jira Agile board (integer). 
+- `JIRA_STORY_POINTS_FIELD`: The custom field ID for story points (e.g., customfield_10004). 
 
 ## Cline Rules 
 

@@ -9,9 +9,9 @@ import csv
 import pandas as pd
 import matplotlib.pyplot as plt
 import json
+load_dotenv()
 
 def get_jira_credentials():
-    load_dotenv()
     jira_url = os.getenv("JIRA_BASE_URL")
     jira_pat = os.getenv("JIRA_PAT")
     if not jira_url or not jira_pat:
@@ -61,7 +61,9 @@ def get_sprint_data(sprint):
         # "goal": getattr(sprint, "goal", None),
     }
 
-def get_issue_data(issue):
+def get_issue_data(issue, sp_field_id=None):
+    if sp_field_id is None:
+        sp_field_id = os.getenv("JIRA_STORY_POINTS_FIELD", "customfield_10004")
     fields = getattr(issue, "fields", None)
     return {
         "key": getattr(issue, "key", None),
@@ -73,7 +75,7 @@ def get_issue_data(issue):
         "created": getattr(fields, "created", None) if fields else None,
         "updated": getattr(fields, "updated", None) if fields else None,
         "resolution": getattr(getattr(fields, "resolution", None), "name", None) if fields else None,
-        "story_points": getattr(fields, "customfield_10004", None) if fields else None,  # Adjust field ID if necessary
+        "story_points": getattr(fields, sp_field_id, None) if fields else None,
     }
 
 
@@ -380,10 +382,7 @@ def get_sprint_insights_with_creep(jira_client, board_id, sp_field_id):
 
     return dataset
 
-
-
-
-def save_dataset_to_json(data, filename="sprint_report.json"):
+def write_dataset_to_json(data, filename="sprint_report.json"):
     try:
         with open(filename, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, default=str, ensure_ascii=False)
@@ -400,34 +399,39 @@ def main():
     logging.basicConfig(level=logging.WARN)
     logging.info("Starting JIRA Data Extraction...")
 
-    board_id = 27193 # TODO: Make this configurable 
-    story_points_field = 'customfield_10004' # TODO: Make this configurable 
+    board_id_str = os.getenv("JIRA_BOARD_ID", "27193")
+    try:
+        board_id = int(board_id_str)
+    except ValueError:
+        logging.error("JIRA_BOARD_ID must be an integer. Current value: %s", board_id_str)
+        sys.exit(1)
+    story_points_field = os.getenv("JIRA_STORY_POINTS_FIELD", "customfield_10004")
 
     jira_url, jira_pat = get_jira_credentials()
     jira = connect_jira(jira_url, jira_pat)
     
-    # project_key = os.getenv("JIRA_PROJECT_KEY")
+    project_key = os.getenv("JIRA_PROJECT_KEY")
 
-    # project = get_project(jira, project_key)
-    # project_data = get_project_data(project)
-    # print("Project Data:", project_data)
+    project = get_project(jira, project_key)
+    project_data = get_project_data(project)
+    print("Project Data:", project_data)
 
-    # issue = get_issue(jira, "CEGBUPOL-4524")
-    # issue_data= get_issue_data(issue)
-    # print("Issue Data:", issue_data)
+    issue = get_issue(jira, "CEGBUPOL-4524")
+    issue_data= get_issue_data(issue, story_points_field)
+    print("Issue Data:", issue_data)
 
-    # cycle_time = compute_cycle_time(issue);
-    # print(f"Cycle time (days): {cycle_time}")
+    cycle_time = compute_cycle_time(issue);
+    print(f"Cycle time (days): {cycle_time}")
 
-    # sprints = get_all_closed_sprints(jira, board_id)
-    # print(f"Total closed sprints: {len(sprints)}")
+    sprints = get_all_closed_sprints(jira, board_id)
+    print(f"Total closed sprints: {len(sprints)}")
 
-    # sprint_data = get_sprint_dataset(sprints[:10], jira, story_points_field)
-    # print("Sprint Dataset:", sprint_data)
+    sprint_data = get_sprint_dataset(sprints[:10], jira, story_points_field)
+    print("Sprint Dataset:", sprint_data)
 
-    # write_dataset_to_csv(sprint_data, filename="sprint_dataset.csv")
+    write_dataset_to_csv(sprint_data, filename="./data/sprint_dataset.csv")
 
-    # plot_velocity_cycle_time(data_filename="sprint_dataset.csv", output_filename="velocity_cycle_time.png")
+    plot_velocity_cycle_time(data_filename="./data/sprint_dataset.csv", output_filename="./data/velocity_cycle_time.png")
 
     epics = [ 
               'CEGBUPOL-4468',
@@ -441,17 +445,17 @@ def main():
               'CEGBUPOL-3553', 
               'CEGBUPOL-4486' 
               ]
-    # data = get_epics_dataset(jira, epics)
+    data = get_epics_dataset(jira, epics)
 
-    # print("Epics Dataset:", data)
+    print("Epics Dataset:", data)
 
-    # write_dataset_to_csv(data, filename="epics_dataset.csv")
+    write_dataset_to_csv(data, filename="./data/epics_dataset.csv")
 
     sprint_dataset = get_sprint_insights_with_creep(jira, board_id, story_points_field)
 
-    save_dataset_to_json(sprint_dataset, filename="sprint_report.json")
+    write_dataset_to_json(sprint_dataset, filename="./data/sprint_report.json")
 
-    # print(sprint_dataset)
+    print(sprint_dataset)
 
 if __name__ == "__main__":
     main()

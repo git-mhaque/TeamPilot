@@ -15,9 +15,9 @@
     - "Insights" (Your one line insight)
 - Round the percentage to whole number and show them in bold. 
 - Use this RAG criteria
-    - Over 70% complete Green 
+    - Over 66% complete Green 
     - Below 40% compelte Red 
-    - Betweed 40% and 70% Amber
+    - Betweed 40% and 66% Amber
 
 # TASK 
 
@@ -25,7 +25,12 @@
 
 Generate a markdown report with filename: Initiative-Insights-YYYY-MM-DD.md besed on the following group of initiative epics. 
 
-**DATA** Use the file epics_dataset.csv
+**DATA** 
+```
+<read_file>
+  <path>./data/epics_dataset.csv</path>
+</read_file>
+```
 
 ## 2. Publish the Generate an Initiative Insights Report 
 
