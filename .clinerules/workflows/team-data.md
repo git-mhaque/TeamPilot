@@ -23,6 +23,12 @@ Install dependencies:
     pip install -r requirements.txt
 ```
 
+Run unit tests:
+```
+    python -m pytest
+```
+
+
 Run the script:
 ```
     python scripts/main.py

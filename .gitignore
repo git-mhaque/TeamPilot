@@ -71,7 +71,7 @@ venv.bak/
 *.log
 
 # dotenv environment files
-.env.*
+.env.
 .env
 
 # Miscellaneous
