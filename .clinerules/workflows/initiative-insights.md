@@ -23,7 +23,7 @@
 
 ## 1. Generate an Initiative Insights Report 
 
-Generate a markdown report with filename: Initiative-Insights-YYYY-MM-DD.md besed on the following group of initiative epics. 
+Generate a markdown report with filename: `./reports/Initiative-Insights-YYYY-MM-DD.md` besed on the following group of initiative epics. 
 
 **DATA** 
 ```
@@ -35,6 +35,6 @@ Generate a markdown report with filename: Initiative-Insights-YYYY-MM-DD.md bese
 ## 2. Publish the Generate an Initiative Insights Report 
 
 - Publish the markdown report to confluence 
-- Page name Initiative Insights (YYYY-MM-DD)
+- Page name `Initiative Insights (YYYY-MM-DD)`
 - Don't inlcude the markdown report title as confluce will have the page title to avoid duplication
 

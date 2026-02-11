@@ -1,7 +1,4 @@
 # TeamPilot
-
-> TeamPilot: Your AI-Powered Command Center for Team Success.
-
 `TeamPilot` transforms raw Jira data into actionable intelligence. By orchestrating automated workflows through the lens of three expert AI personas — `The Scrum Master`, `The Agile Coach`, and `The Delivery Manager` — it provides the navigation and insights teams need to land their sprints on time, every time.
 
 |Persona |	TeamPilot Role	| Focus Area |
@@ -9,7 +6,6 @@
 | Scrum Master	| The Navigator |	Tactical sprint execution and obstacle removal.| 
 | Agile Coach	| The Flight Instructor	| Long-term growth, health metrics, and cultural evolution. | 
 | Delivery Manager |	The Mission Director |	Strategic alignment across multiple initiatives and timelines. |
-|||
 
 
 This project orchestrates and automates team workflows and generates insights via Cline workflows. These workflows use Jira as a primary data source and leverage Python to fetch and preprocess relevant data, and then utilize AI to generate insightful artifacts. 
@@ -39,7 +35,14 @@ This project orchestrates and automates team workflows and generates insights vi
 
     Edit `.env` and set the required environment variables.
 
-5. **Run the example:**
+5. **Run unit tests:**
+
+    ```
+    python -m pytest
+    ```
+
+6. **Run the example:**
+
     ```
     python main.py
     ```

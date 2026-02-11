@@ -25,14 +25,17 @@ Install dependencies:
 
 Run the script:
 ```
-    python main.py
+    python scripts/main.py
 ```
 
 
 ## 2. Validate
 Make sure that the following files have been generated: 
-- sprint_dataset.csv
-- velocity_cycle_time.png
+- data/epics_dataset.csv
+- data/sprint_dataset.csv
+- data/sprint_report.json
+- data/velocity_cycle_time.png
+
 ```
     ls -l <filename 1> <filename 2>
 ```

@@ -108,6 +108,10 @@ def get_all_closed_sprints(jira, board_id):
     start_at = 0
     max_results = 50  # safe default
 
+    def _start_key(sprint):
+        value = getattr(sprint, "startDate", None)
+        return value or ""
+
     while True:
         batch = jira.sprints(
             board_id,
@@ -128,7 +132,7 @@ def get_all_closed_sprints(jira, board_id):
 
     sprints_sorted = sorted(
         [s for s in all_sprints if hasattr(s, "startDate")],
-        key=lambda s: s.startDate,
+        key=_start_key,
         reverse=True
     )
 
