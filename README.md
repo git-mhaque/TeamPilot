@@ -11,50 +11,24 @@
 This project orchestrates and automates team workflows and generates insights via Cline workflows. These workflows use Jira as a primary data source and leverage Python to fetch and preprocess relevant data, and then utilize AI to generate insightful artifacts. 
 
 
-# Quick Start
+# Quick Set Up
 
+## Set Up Environment Variables
 
-## Python Setup
-1. **Clone/download this project.**
+Copy the example environment file and update it with your details:
+```
+cp .env.example .env
+```
 
-2. **(Recommended) Create and activate a Python virtual environment:**
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
+Edit `.env` and set the required environment variables.
 
-3. **Install dependencies:**
-    ```
-    pip install -r requirements.txt
-    ```
-
-4. **Copy the example environment file and update it with your details:** 
-    ```
-    cp .env.example .env
-    ```
-
-    Edit `.env` and set the required environment variables.
-
-5. **Run unit tests:**
-
-    ```
-    python -m pytest
-    ```
-
-6. **Run the example:**
-
-    ```
-    python main.py
-    ```
-
-## Environment Variables
-- `JIRA_BASE_URL`: Your JIRA URL (e.g., https://your-domain.atlassian.net).
-- `JIRA_PAT`: Your JIRA Personal Access Token (PAT). Generate at https://id.atlassian.com/manage-profile/security/api-tokens.
-- `JIRA_PROJECT_KEY`: Your Jira project key (e.g., CEGBUPOL).
+- `JIRA_BASE_URL`: Your JIRA URL.
+- `JIRA_PAT`: Your JIRA Personal Access Token (PAT). 
+- `JIRA_PROJECT_KEY`: Your Jira project key (e.g., MYPROJ).
 - `JIRA_BOARD_ID`: The ID of your Jira Agile board (integer). 
 - `JIRA_STORY_POINTS_FIELD`: The custom field ID for story points (e.g., customfield_10004). 
 
-## Cline Rules 
+## Set Up Cline Rules 
 
 include `Config.md` in `.clinerules` with following information:
 ```
@@ -66,6 +40,13 @@ include `Config.md` in `.clinerules` with following information:
 - Space key: <Default Space Key>
 - Create all pages under this parent page: `<Default Parent Page>` (pageId=<PArent Page ID>)
 - Overwrite or update if any page with the same name already exists
+```
+
+
+# Extracting Data  
+
+```
+\team-data.md 
 ```
 
 # Running Workflows 
