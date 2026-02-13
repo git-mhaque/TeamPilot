@@ -35,7 +35,11 @@ Edit `.env` and set the required environment variables.
 - `CONFLUENCE_PARENT_PAGE_ID`: You Confluence parent page ID under which reports will be published.  
 
 
-# Run Workflows
+# Workflow Orchestration
+
+The following diagram shows the orchestration of various workflows: 
+
+![Workflow](workflow-orchestration.png)
 
 ## Extract Data  
 
@@ -63,7 +67,7 @@ These workflows with generate markdown reports based on extracted data in `./rep
 
 ## Publish Insights 
 
-This workflow will publish reports generated in `./reports` to Confluence.  
+This workflow will publish the reports generated in `./reports` to Confluence.  
 
 ```
 \publish-insights.md 
