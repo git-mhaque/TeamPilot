@@ -31,7 +31,7 @@ Run unit tests:
 
 Run the script:
 ```
-    python3 scripts.main
+    python3 -m scripts.main
 ```
 
 
