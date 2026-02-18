@@ -252,16 +252,53 @@ def test_get_epics_dataset(monkeypatch):
 
 
 def test_get_sprint_insights_with_creep():
-    sprint = SimpleNamespace(id=1, name="Sprint", startDate="2024-01-01T00:00:00Z", endDate="2024-01-15T00:00:00Z")
+    sprint = SimpleNamespace(
+        id=1,
+        name="Sprint",
+        startDate="2024-01-01T00:00:00Z",
+        endDate="2024-01-15T00:00:00Z",
+        goal="Improve velocity;Reduce bugs"
+    )
     history = SimpleNamespace(
         created="2024-01-05T00:00:00Z",
         items=[SimpleNamespace(field="sprint", to=str([1]))],
     )
-    issue = build_issue(points=3, category="In Progress", changelog=SimpleNamespace(histories=[history]))
-    jira = DummyJira(board_sprints=[sprint], issues=[issue])
+    # Add epic, join_assignee, x_day fields for the test
+    epic_key = "EPIC-123"
+    class DummyUser:
+        displayName = "Jenny Agilist"
+    fields = SimpleNamespace(
+        summary="Issue",
+        status=SimpleNamespace(name="In Progress", statusCategory=SimpleNamespace(name="In Progress")),
+        customfield_10004=3,
+        assignee=None,
+        epic=epic_key,
+        customfield_17801=DummyUser(),
+        x_day=5
+    )
+    issue = SimpleNamespace(key="ISSUE-1", fields=fields, changelog=SimpleNamespace(histories=[history]))
+    class EpicJira(DummyJira):
+        def issue(self, key, expand=None):
+            if key == epic_key:
+                return SimpleNamespace(key=key, fields=SimpleNamespace(summary="Epic Summary"))
+            return super().issue(key, expand=expand)
+        def client_info(self):
+            return "http://jira.local"
+    jira = EpicJira(board_sprints=[sprint], issues=[issue])
     dataset = main.get_sprint_insights_with_creep(jira, board_id=1, sp_field_id="customfield_10004")
     assert dataset["metrics"]["scope_creep_count"] == 1
     assert dataset["points"]["total"] == 3
+    # Goals array, remaining_days, and jira_base_url
+    assert isinstance(dataset["sprint_info"]["goals"], list)
+    assert "Improve velocity" in dataset["sprint_info"]["goals"][0]
+    assert isinstance(dataset["sprint_info"]["remaining_days"], int)
+    assert dataset["sprint_info"]["jira_base_url"] == "http://jira.local"
+    # Epic key/title and new fields exist on issue
+    ic = dataset["issue_collection"][0]
+    assert ic["epic_key"] == epic_key
+    assert ic["epic_title"] == "Epic Summary"
+    assert ic["join_assignee"] == "Jenny Agilist"
+    assert ic["x_day"] == 5
 
 
 def test_write_dataset_to_json(tmp_path, capsys):

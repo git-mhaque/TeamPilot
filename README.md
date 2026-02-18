@@ -17,9 +17,9 @@ By leveraging Jira as a data source and Python for deep-dive preprocessing, Beac
 
 ## Runtime Environment 
 - IDE: `Visual Studio Code` 
-- Python: `3.12`
 - Extension: `Cline`
 - Model: `gpt-4.1`
+- Python: `3.12`
 
 
 ## Environment Variables
@@ -42,48 +42,19 @@ Edit `.env` and set the required environment variables.
 - `CONFLUENCE_PARENT_PAGE_ID`: You Confluence parent page ID under which reports will be published.  
 
 
-# Workflow Orchestration
+# Available Workflows 
 
-The following diagram shows the orchestration of various workflows: 
-
-![Workflow](workflow-orchestration.png)
-(Generated using mermaid.ai)
-
-## Extract Data  
-
-This workflow will extract data from Jira in `./data` directory. 
-
-```
-\team-data.md 
-```
-
-## Generate Insights 
-
-These workflows with generate markdown reports based on extracted data in `./reports` directory. 
-
+## Sprint Insights 
 ```
 \sprint-insights.md 
 ```
 
+## Team Insights
 ```
 \team-insights.md 
 ```
 
+## Initiative Insights
 ```
 \initiative-insights.md 
 ```
-
-## Publish Insights 
-
-This workflow will publish the reports generated in `./reports` to Confluence.  
-
-```
-\publish-insights.md 
-```
-
-
-<!--
-# Schedule Workflows 
-
-Schedule the above workflows based on your preferred cadence. 
--->

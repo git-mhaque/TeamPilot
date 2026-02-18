@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from statistics import mean
 from typing import Iterable
+import datetime
 
 from dateutil import parser
 
@@ -125,11 +126,36 @@ def get_sprint_insights_with_creep(service: JiraService, board_id: int, sp_field
 
     issues = service.search_issues(f"sprint = {sprint_id}", expand="changelog", maxResults=False)
 
+  
+
+    # Sprint goals extraction
+    sprint_goal_str = getattr(active_sprint, "goal", None)
+    if sprint_goal_str and isinstance(sprint_goal_str, str):
+        goals = [g.strip() for g in sprint_goal_str.split(";") if g.strip()] if ";" in sprint_goal_str else [sprint_goal_str]
+    else:
+        goals = []
+
+    # Remaining days -- default to 0 if endDate is missing or past
+    sprint_end_str = getattr(active_sprint, "endDate", None)
+    if sprint_end_str:
+        try:
+            today_dt = datetime.datetime.now(datetime.timezone.utc)
+            end_dt = parser.parse(sprint_end_str)
+            delta = (end_dt - today_dt).days
+            remaining_days = max(delta, 0)
+        except Exception:
+            remaining_days = 0
+    else:
+        remaining_days = 0
+
     dataset = {
         "sprint_info": {
             "name": active_sprint.name,
             "start": active_sprint.startDate,
             "end": getattr(active_sprint, "endDate", None),
+            "goals": goals,
+            "remaining_days": remaining_days,
+            "jira_base_url": service.client_info() if hasattr(service, "client_info") else None,
         },
         "metrics": {
             "total_issues": len(issues),
@@ -165,6 +191,48 @@ def get_sprint_insights_with_creep(service: JiraService, board_id: int, sp_field
         else:
             dataset["points"]["remaining"] += points
 
+        # --- Epic Key/Title Extraction ---
+        epic_key = None
+        epic_title = None
+
+        # Try popular field names and custom field
+        for epic_field_name in ("epic", "epicLink", "customfield_10902"):
+            if hasattr(issue.fields, epic_field_name):
+                epic_key = getattr(issue.fields, epic_field_name, None)
+                if epic_key:
+                    break
+
+        # If still none, check dict-access as fallback (less type-safe)
+        if not epic_key and hasattr(issue.fields, "__dict__"):
+            for k in ("epic", "epicLink", "customfield_10014"):
+                maybe = getattr(issue.fields, "__dict__", {}).get(k, None)
+                if maybe:
+                    epic_key = maybe
+                    break
+
+        # If we got an Epic key, try to fetch its summary
+        if epic_key:
+            try:
+                epic_issue = service.issue(epic_key)
+                if hasattr(epic_issue, "fields") and hasattr(epic_issue.fields, "summary"):
+                    epic_title = epic_issue.fields.summary
+            except Exception:
+                epic_title = None
+
+        # --- Join Assignee (customfield_17801) ---
+        join_assignee_val = getattr(issue.fields, "customfield_17801", None)
+        if join_assignee_val and hasattr(join_assignee_val, "displayName"):
+            join_assignee = join_assignee_val.displayName
+        elif isinstance(join_assignee_val, str):
+            join_assignee = join_assignee_val
+        elif join_assignee_val is not None:
+            join_assignee = str(join_assignee_val)
+        else:
+            join_assignee = "Unassigned"
+
+        # --- X day value (custom field or None) ---
+        x_day = getattr(issue.fields, "x_day", None)  # Placeholder: replace with actual field name/id if clarified
+
         issue_data = {
             "key": issue.key,
             "title": issue.fields.summary,
@@ -173,6 +241,10 @@ def get_sprint_insights_with_creep(service: JiraService, board_id: int, sp_field
             "category": category,
             "points": points,
             "is_creep": is_creep,
+            "epic_key": epic_key,
+            "epic_title": epic_title,
+            "join_assignee": join_assignee,
+            "x_day": x_day,
         }
         dataset["issue_collection"].append(issue_data)
 
