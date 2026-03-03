@@ -18,7 +18,7 @@ By leveraging Jira as a data source and Python for deep-dive preprocessing, Beac
 ## Runtime Environment 
 - IDE: `Visual Studio Code` 
 - Extension: `Cline`
-- Model: `gpt-4.1`
+- Model: `gpt-5-codex`
 - Python: `3.12`
 
 
