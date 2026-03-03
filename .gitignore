@@ -79,3 +79,4 @@ venv.bak/
 *~
 data/*
 reports/
+config/initiatives.json

@@ -16,7 +16,7 @@ def _write_initiatives(path: Path, content):
 
 
 def test_load_epic_keys_from_initiatives_success(tmp_path, monkeypatch):
-    monkeypatch.setenv("TEAM_BEACON_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("TEAM_BEACON_CONFIG_DIR", str(tmp_path))
     initiatives_path = tmp_path / "initiatives.json"
     _write_initiatives(
         initiatives_path,
@@ -32,7 +32,7 @@ def test_load_epic_keys_from_initiatives_success(tmp_path, monkeypatch):
 
 
 def test_load_epic_keys_missing_file(monkeypatch, tmp_path):
-    monkeypatch.setenv("TEAM_BEACON_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("TEAM_BEACON_CONFIG_DIR", str(tmp_path))
     with pytest.raises(FileNotFoundError):
         load_epic_keys_from_initiatives()
 
@@ -50,7 +50,7 @@ def test_load_epic_keys_missing_file(monkeypatch, tmp_path):
     ],
 )
 def test_load_epic_keys_invalid_content(tmp_path, monkeypatch, bad_content):
-    monkeypatch.setenv("TEAM_BEACON_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("TEAM_BEACON_CONFIG_DIR", str(tmp_path))
     initiatives_path = tmp_path / "initiatives.json"
     _write_initiatives(initiatives_path, bad_content)
 
@@ -59,7 +59,7 @@ def test_load_epic_keys_invalid_content(tmp_path, monkeypatch, bad_content):
 
 
 def test_load_initiatives_returns_structure(tmp_path, monkeypatch):
-    monkeypatch.setenv("TEAM_BEACON_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("TEAM_BEACON_CONFIG_DIR", str(tmp_path))
     initiatives_path = tmp_path / "initiatives.json"
     sample = [{"group": "G", "epics": [{"key": "E"}]}]
     _write_initiatives(initiatives_path, sample)

@@ -33,22 +33,16 @@ Run the script:
 
 
 ```
-    python3 -m scripts.main --task sprint  
+    python3 -m scripts.main --task sprints_dataset   
 ```
-
-```
-    python3 -m scripts.main --task chart 
-```
-
-```
-    python3 -m scripts.main --task epics  
-```
-
 
 ```
     python3 -m scripts.main --task active_sprint  
 ```
 
+```
+    python3 -m scripts.main --task epics  
+```
 
 
 

@@ -15,7 +15,7 @@ class InitiativeLoadError(RuntimeError):
 
 
 def _load_and_validate_initiatives(filename: str | os.PathLike) -> list[dict]:
-    path = resolve_path(filename)
+    path = Path(filename)
     try:
         with path.open("r", encoding="utf-8") as fh:
             content = json.load(fh)
@@ -56,6 +56,17 @@ def resolve_path(filename: str | os.PathLike) -> Path:
     return _data_dir() / path
 
 
+def _config_dir() -> Path:
+    return Path(os.getenv("TEAM_BEACON_CONFIG_DIR", "./config"))
+
+
+def _resolve_initiatives_path(filename: str | os.PathLike) -> Path:
+    path = Path(filename)
+    if path.is_absolute():
+        return path
+    return _config_dir() / path
+
+
 def write_dataset_to_csv(dataset: list[Mapping], filename: str | os.PathLike) -> None:
     filepath = resolve_path(filename)
     if not dataset:
@@ -84,7 +95,7 @@ def write_dataset_to_json(data, filename: str | os.PathLike) -> bool:
 def load_initiatives(filename: str | os.PathLike = "initiatives.json") -> list[dict]:
     """Load and validate the initiatives structure from disk."""
 
-    return _load_and_validate_initiatives(filename)
+    return _load_and_validate_initiatives(_resolve_initiatives_path(filename))
 
 
 def load_epic_keys_from_initiatives(
@@ -92,7 +103,7 @@ def load_epic_keys_from_initiatives(
 ) -> list[str]:
     """Return epic keys from an initiatives JSON file."""
 
-    content = _load_and_validate_initiatives(filename)
+    content = _load_and_validate_initiatives(_resolve_initiatives_path(filename))
 
     epic_keys: list[str] = []
     for group in content:

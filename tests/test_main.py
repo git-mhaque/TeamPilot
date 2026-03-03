@@ -389,11 +389,11 @@ def test_main_cli_task_sprint_custom_out(monkeypatch):
     monkeypatch.setattr(main, "write_dataset_to_json", lambda *args, **kwargs: True)
 
     old_argv = sys.argv
-    sys.argv = ["main.py", "--task", "sprint", "--sprint-out", custom_sprint_file]
+    sys.argv = ["main.py", "--task", "sprints_dataset", "--sprint-out", custom_sprint_file]
     try:
         main.main()
         assert called["filename"] == custom_sprint_file
-        assert plot_called["value"] is False
+        assert plot_called["value"] is True
         assert epics_called["value"] is False
     finally:
         sys.argv = old_argv

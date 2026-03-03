@@ -5,7 +5,7 @@ Usage:
     python -m scripts.main [OPTIONS]
 
 Options:
-    --task {all,project,issue,sprint,chart,epics,active_sprint}
+    --task {all,project,issue,sprints_dataset,epics,active_sprint}
                         Select a specific task to run (default: all tasks)
     --sprint-out PATH   Output path for sprint dataset CSV (default: sprint_dataset.csv)
     --epics-out PATH    Output path for epics dataset JSON (default: epics_dataset.json)
@@ -14,13 +14,13 @@ Options:
     --chart-out PATH    Output path for velocity/cycle PNG chart (default: velocity_cycle_time.png)
 
 When --task is omitted or set to "all", the CLI runs the full pipeline in the
-following order: project, issue, sprint, chart, epics, active_sprint. Specifying a
+following order: project, issue, sprints_dataset, epics, active_sprint. Specifying a
 single task runs only that portion.
 
 Examples:
-    python -m scripts.main                       # run entire pipeline
-    python -m scripts.main --task epics          # run only the epics dataset
-    python -m scripts.main --task sprint --sprint-out my_sprints.csv
+    python -m scripts.main                               # run entire pipeline
+    python -m scripts.main --task epics                  # run only the epics dataset
+    python -m scripts.main --task sprints_dataset --sprint-out my_sprints.csv
 
 Environment variables JIRA_BASE_URL, JIRA_PAT, JIRA_PROJECT_KEY, and JIRA_BOARD_ID must be set or provided via a config file.
 """
@@ -125,7 +125,7 @@ def plot_velocity_cycle_time(data_filename="sprint_dataset.csv", output_filename
 
 import argparse
 
-TASK_CHOICES = ("all", "project", "issue", "sprint", "chart", "epics", "active_sprint")
+TASK_CHOICES = ("all", "project", "issue", "sprints_dataset", "epics", "active_sprint")
 
 
 def run_cli(
@@ -145,7 +145,7 @@ def run_cli(
 
     selected_tasks = [task]
     if task == "all":
-        selected_tasks = ["project", "issue", "sprint", "chart", "epics", "active_sprint"]
+        selected_tasks = ["project", "issue", "sprints_dataset", "epics", "active_sprint"]
 
     def run_project():
         project = get_project(jira_service, runtime_config.project_key)
@@ -159,14 +159,12 @@ def run_cli(
         cycle_time = compute_cycle_time(issue)
         print(f"Cycle time (days): {cycle_time}")
 
-    def run_sprint():
+    def run_sprints_dataset():
         sprints = get_all_closed_sprints(jira_service, runtime_config.board_id)
         print(f"Total closed sprints: {len(sprints)}")
         sprint_data = get_sprint_dataset(sprints[:10], jira_service, runtime_config.story_points_field)
         print("Sprint Dataset:", sprint_data)
         write_dataset_to_csv(sprint_data, filename=sprint_out)
-
-    def run_chart():
         plot_velocity_cycle_time(
             data_filename=sprint_out,
             output_filename=chart_out,
@@ -205,8 +203,7 @@ def run_cli(
     task_map = {
         "project": run_project,
         "issue": run_issue,
-        "sprint": run_sprint,
-        "chart": run_chart,
+        "sprints_dataset": run_sprints_dataset,
         "epics": run_epics,
         "active_sprint": run_active_sprint,
     }
