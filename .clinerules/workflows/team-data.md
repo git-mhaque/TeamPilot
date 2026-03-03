@@ -30,9 +30,26 @@ Run unit tests:
 
 
 Run the script:
+
+
 ```
-    python3 -m scripts.main
+    python3 -m scripts.main --task sprint  
 ```
+
+```
+    python3 -m scripts.main --task chart 
+```
+
+```
+    python3 -m scripts.main --task epics  
+```
+
+
+```
+    python3 -m scripts.main --task report  
+```
+
+
 
 
 ## 2. Validate
