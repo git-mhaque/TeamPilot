@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from scripts import main
+from scripts.io_utils import InitiativeLoadError
 
 
 class DummyJira:
@@ -328,6 +329,7 @@ def test_main_happy_path(monkeypatch):
     monkeypatch.setattr(main, "get_sprint_dataset", lambda *args, **kwargs: [{"Name": "Sprint"}])
     monkeypatch.setattr(main, "write_dataset_to_csv", lambda *args, **kwargs: None)
     monkeypatch.setattr(main, "plot_velocity_cycle_time", lambda *args, **kwargs: None)
+    monkeypatch.setattr(main, "load_epic_keys_from_initiatives", lambda *args, **kwargs: ["EPIC-1"])
     monkeypatch.setattr(main, "get_epics_dataset", lambda *args, **kwargs: [])
     monkeypatch.setattr(main, "get_sprint_insights_with_creep", lambda *args, **kwargs: {})
     monkeypatch.setattr(main, "write_dataset_to_json", lambda *args, **kwargs: True)

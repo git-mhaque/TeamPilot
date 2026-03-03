@@ -32,7 +32,12 @@ from jira import JIRA
 from .charting import plot_velocity_cycle_time as _plot_velocity_cycle_time
 from .config import get_jira_credentials, load_runtime_config
 from .epic_service import get_epics_dataset as _build_epics_dataset
-from .io_utils import write_dataset_to_csv, write_dataset_to_json
+from .io_utils import (
+    InitiativeLoadError,
+    load_epic_keys_from_initiatives,
+    write_dataset_to_csv,
+    write_dataset_to_json,
+)
 from .jira_client import (
     JiraService,
     connect_jira as _connect_jira_service,
@@ -165,22 +170,17 @@ def run_cli(
             output_filename=chart_out,
         )
 
-    # Epics keys could be another CLI arg in future; for now, keep static:
-    epics = [
-        "CEGBUPOL-4468",
-        "CEGBUPOL-4485",
-        "CEGBUPOL-4484",
-        "CEGBUPOL-4483",
-        "CEGBUPOL-4470",
-        "CEGBUPOL-4187",
-        "CEGBUPOL-3635",
-        "CEGBUPOL-4487",
-        "CEGBUPOL-3553",
-        "CEGBUPOL-4486",
-    ]
-
     def run_epics():
-        epic_data = get_epics_dataset(jira_service, epics)
+        try:
+            epic_keys = load_epic_keys_from_initiatives()
+        except FileNotFoundError as exc:
+            logging.error("Cannot run epics task: %s", exc)
+            return
+        except InitiativeLoadError as exc:
+            logging.error("Cannot run epics task: %s", exc)
+            return
+
+        epic_data = get_epics_dataset(jira_service, epic_keys)
         print("Epics Dataset:", epic_data)
         write_dataset_to_csv(epic_data, filename=epics_out)
 
